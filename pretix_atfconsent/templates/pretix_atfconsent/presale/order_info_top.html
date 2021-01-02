@@ -1,0 +1,26 @@
+{% load i18n %}
+{% load eventurl %}
+{% load bootstrap3 %}
+{% load rich_text %}
+
+<div class="panel panel-primary">
+    <div class="panel-heading">
+        <h3 class="panel-title">
+            {% trans "Order consent required" %}
+        </h3>
+    </div>
+    <ul class="list-group">
+        <li class="list-group-item">
+            <p>
+                    {{ request.event.settings.pretix_atfconsent_short_explanation|rich_text }}
+            </p>
+            <div class="text-right flip">
+                <a href="{% eventurl event "plugins:pretix_atfconsent:order.consent" order=order.code secret=order.secret %}"
+                        class="btn btn-primary">
+                    {% trans "Provide Consent" %}
+                </a>
+            </div>
+            <div class="clearfix"></div>
+        </li>
+    </ul>
+</div>

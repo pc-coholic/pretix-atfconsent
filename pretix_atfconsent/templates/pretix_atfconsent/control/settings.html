@@ -1,0 +1,54 @@
+{% extends "pretixcontrol/base.html" %}
+{% load i18n %}
+{% load bootstrap3 %}
+{% load hierarkey_form %}
+{% load formset_tags %}
+{% block title %}{% trans "Consent Collection (ATF)" %}{% endblock %}
+{% block content %}
+    <h1>
+        {% trans "Consent Collection (ATF)" %}
+    </h1>
+
+    <form action="" method="post" class="form-horizontal" enctype="multipart/form-data">
+        {% csrf_token %}
+        <fieldset>
+            <legend>{% trans "Settings" %}</legend>
+            {% bootstrap_form form layout="control" %}
+        </fieldset>
+        <div class="form-group submit-group">
+            <button type="submit" class="btn btn-primary btn-save">
+                {% trans "Save" %}
+            </button>
+        </div>
+    </form>
+    <br />
+    <fieldset>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{% trans "Statistics" %}</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="dashboard">
+                        <div class="widget-container widget-small">
+                            <div class="numwidget">
+                                <span class="num">{{ total_orders }}</span>
+                                <span class="text">{% trans "Placed Orders" %}</span>
+                            </div>
+                        </div>
+                        <div class="widget-container widget-small">
+                            <div class="numwidget">
+                                <span class="num">{{ given_consents }}</span>
+                                <span class="text">{% trans "Given Consents" %}</span>
+                            </div>
+                        </div>
+                        <div class="widget-container widget-small">
+                            <div class="numwidget">
+                                <span class="num">{{ pending_consents }}</span>
+                                <span class="text">{% trans "Pending Consents" %}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </fieldset>
+{% endblock %}

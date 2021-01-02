@@ -1,0 +1,3 @@
+recursive-include pretix_atfconsent/static *
+recursive-include pretix_atfconsent/templates *
+recursive-include pretix_atfconsent/locale *
