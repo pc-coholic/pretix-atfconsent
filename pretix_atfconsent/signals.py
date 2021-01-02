@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _, gettext_noop
 from i18nfield.strings import LazyI18nString
 from pretix.base.models import Event, Order
 from pretix.base.settings import settings_hierarkey
+from pretix.base.signals import register_mail_placeholders
 from pretix.control.signals import nav_event_settings
 from pretix.presale.signals import order_info_top
 
@@ -38,6 +39,12 @@ def order_info_top(sender: Event, request, order: Order, **kwargs):
         'event': sender,
     }
     return template.render(ctx, request=request)
+
+
+@receiver(register_mail_placeholders, dispatch_uid="atfconsent_register_mail_placeholders")
+def register_mail_renderers(sender, **kwargs):
+    from .email import ATFConsentMailTextPlaceholder
+    return [ATFConsentMailTextPlaceholder()]
 
 
 settings_hierarkey.add_default('pretix_atfconsent_enabled', False, bool)
