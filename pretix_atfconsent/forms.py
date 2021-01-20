@@ -6,7 +6,8 @@ from pretix.base.forms import SettingsForm
 
 class ATFConsentSettingsForm(SettingsForm):
     pretix_atfconsent_enabled = forms.BooleanField(
-        label=_('Enable ATF Consent Collection')
+        label=_('Enable ATF Consent Collection'),
+        required=False
     )
 
     pretix_atfconsent_explanation = I18nFormField(
