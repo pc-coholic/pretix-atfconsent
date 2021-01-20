@@ -81,6 +81,12 @@ class ATFConsentSettings(EventSettingsViewMixin, EventSettingsFormView):
             event=self.request.event,
             status__in=[Order.STATUS_PENDING, Order.STATUS_PAID]
         )
+        if not self.request.event.settings.pretix_atfconsent_all_items:
+            all_orders = all_orders.filter(
+                all_positions__item__in=self.request.event.settings.pretix_atfconsent_items,
+                all_positions__canceled=False
+            ).distinct()
+
         ctx['total_orders'] = all_orders.count()
         ctx['given_consents'] = LogEntry.objects.filter(
             event=self.request.event,

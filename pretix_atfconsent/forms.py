@@ -2,6 +2,7 @@ from django import forms
 from django.utils.translation import gettext_lazy as _, gettext_noop  # NoQA
 from i18nfield.forms import I18nFormField, I18nTextarea
 from pretix.base.forms import SettingsForm
+from pretix.base.models import Item
 
 
 class ATFConsentSettingsForm(SettingsForm):
@@ -25,3 +26,38 @@ class ATFConsentSettingsForm(SettingsForm):
         required=True,
         widget=I18nTextarea,
     )
+
+    pretix_atfconsent_all_items = forms.BooleanField(
+        label=_("All products (including newly created ones)"),
+        required=False
+    )
+
+    pretix_atfconsent_items = forms.ModelMultipleChoiceField(
+        queryset=Item.objects.none(),
+        widget=forms.CheckboxSelectMultiple(
+            attrs={
+                'class': 'scrolling-multiple-choice',
+                'data-inverse-dependency': '#id_pretix_atfconsent_all_items',
+            }
+        ),
+        label=_('Limit to products'),
+        initial=None,
+        required=False
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.event = kwargs.pop('obj')
+
+        self.fields['pretix_atfconsent_items'].queryset = Item.objects.filter(event=self.event)
+
+    def clean(self):
+        data = super().clean()
+
+        for k, v in self.fields.items():
+            if isinstance(v, forms.ModelMultipleChoiceField):
+                if k in data:
+                    answstr = [o.pk for o in data[k]]
+                    data[k] = answstr
+
+        return data

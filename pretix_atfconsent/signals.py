@@ -75,3 +75,6 @@ settings_hierarkey.add_default('pretix_atfconsent_short_explanation', LazyI18nSt
         "Please do this as soon as possible, as we will have to cancel orders of participants that do not actively "
         "provide their consent.\r\n"
     )), LazyI18nString)
+
+settings_hierarkey.add_default('pretix_atfconsent_all_items', True, bool)
+settings_hierarkey.add_default('pretix_atfconsent_items', [], list)

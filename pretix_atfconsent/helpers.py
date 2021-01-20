@@ -20,5 +20,9 @@ def should_collect_consent(order: Order):
         not order.event.settings.get('pretix_atfconsent_enabled', False)
         or order.status not in [Order.STATUS_PAID, Order.STATUS_PENDING]
         or has_consented(order)
+        or not (
+            bool(order.positions.filter(item__in=order.event.settings.get('pretix_atfconsent_items', [])))
+            if not order.event.settings.get('pretix_atfconsent_all_items', False) else True
+        )
         or len(confirmation_messages(order.event)) == 0
     )
