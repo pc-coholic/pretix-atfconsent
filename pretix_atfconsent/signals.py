@@ -25,7 +25,7 @@ def nav_event_settings(sender, request, **kwargs):
             'event': request.event.slug,
             'organizer': request.organizer.slug,
         }),
-        'active': 'settings' in url.url_name,
+        'active': (url.namespace == 'plugins:pretix_atfconsent' and url.url_name == 'settings'),
         'icon': 'check',
     }]
 
