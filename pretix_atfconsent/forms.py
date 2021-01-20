@@ -1,8 +1,11 @@
 from django import forms
+from django.urls import reverse
 from django.utils.translation import gettext_lazy as _, gettext_noop  # NoQA
+from django_scopes.forms import SafeModelChoiceField
 from i18nfield.forms import I18nFormField, I18nTextarea
 from pretix.base.forms import SettingsForm
-from pretix.base.models import Item
+from pretix.base.models import Item, CheckinList
+from pretix.control.forms.widgets import Select2
 
 
 class ATFConsentSettingsForm(SettingsForm):
@@ -45,11 +48,30 @@ class ATFConsentSettingsForm(SettingsForm):
         required=False
     )
 
+    pretix_atfconsent_checkinlist = SafeModelChoiceField(
+        label=_('Track given consents on Check-In list'),
+        queryset=CheckinList.objects.none(),
+        required=False,
+        disabled=True
+    )
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.event = kwargs.pop('obj')
 
         self.fields['pretix_atfconsent_items'].queryset = Item.objects.filter(event=self.event)
+        self.fields['pretix_atfconsent_checkinlist'].queryset = self.event.checkin_lists.all()
+        self.fields['pretix_atfconsent_checkinlist'].widget = Select2(
+            attrs={
+                'data-model-select2': 'generic',
+                'data-select2-url': reverse('control:event.orders.checkinlists.select2', kwargs={
+                    'event': self.event.slug,
+                    'organizer': self.event.organizer.slug,
+                }),
+                'data-placeholder': _('Send to customers checked in on list'),
+            }
+        )
+        self.fields['pretix_atfconsent_checkinlist'].widget.choices = self.fields['pretix_atfconsent_checkinlist'].choices
 
     def clean(self):
         data = super().clean()

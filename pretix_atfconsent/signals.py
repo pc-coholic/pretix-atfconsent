@@ -2,14 +2,16 @@ from django.dispatch import receiver
 from django.template.loader import get_template
 from django.urls import resolve, reverse
 from django.utils.translation import gettext_lazy as _, gettext_noop
+from django_scopes import scopes_disabled
 from i18nfield.strings import LazyI18nString
 from pretix.base.models import Event, Order
 from pretix.base.settings import settings_hierarkey
-from pretix.base.signals import register_mail_placeholders
+from pretix.base.signals import register_mail_placeholders, periodic_task
 from pretix.control.signals import nav_event_settings
 from pretix.presale.signals import order_info_top
 
 from pretix_atfconsent.helpers import should_collect_consent
+from pretix_atfconsent.tasks import consent_to_checkin
 
 
 @receiver(nav_event_settings, dispatch_uid="atfconsent_nav_event_settings")
@@ -47,8 +49,23 @@ def register_mail_renderers(sender, **kwargs):
     return [ATFConsentMailTextPlaceholder()]
 
 
-settings_hierarkey.add_default('pretix_atfconsent_enabled', False, bool)
+@receiver(periodic_task, dispatch_uid='atfconsent_periodic_task')
+@scopes_disabled()
+def periodic_task(sender, **kwargs):
+    Event_SettingsStore = get_model('pretixbase', 'Event_SettingsStore') # NoQA
+    events = list(Event.objects.filter(
+        id__in=Event_SettingsStore.objects.filter(
+            key='pretix_atfconsent_checkinlist',
+            value__isNull=False
+        ).values_list('object_id', flat=True),
+        plugins__contains='pretix_atfconsent',
+    ).values_list('pk', flat=True))
 
+    for eventpk in events:
+        consent_to_checkin.apply(args=(eventpk,))
+
+
+settings_hierarkey.add_default('pretix_atfconsent_enabled', False, bool)
 settings_hierarkey.add_default('pretix_atfconsent_explanation', LazyI18nString.from_gettext(
     gettext_noop(
         "Due to the evolving nature of our event, the following information was not yet available at the time "
@@ -63,7 +80,6 @@ settings_hierarkey.add_default('pretix_atfconsent_explanation', LazyI18nString.f
         "If you would like to actively dispute the conditions below and not wait for us to cancel your order due to "
         "non-agreement of the conditions outlined below, feel free to contact us directly at any time."
     )), LazyI18nString)
-
 settings_hierarkey.add_default('pretix_atfconsent_short_explanation', LazyI18nString.from_gettext(
     gettext_noop(
         "Due to the evolving nature of our event, some information was not yet available at the time "
@@ -75,6 +91,5 @@ settings_hierarkey.add_default('pretix_atfconsent_short_explanation', LazyI18nSt
         "Please do this as soon as possible, as we will have to cancel orders of participants that do not actively "
         "provide their consent.\r\n"
     )), LazyI18nString)
-
 settings_hierarkey.add_default('pretix_atfconsent_all_items', True, bool)
 settings_hierarkey.add_default('pretix_atfconsent_items', [], list)
